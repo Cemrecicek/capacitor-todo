@@ -18,6 +18,7 @@ import {
 } from "@ionic/react";
 import { add } from "ionicons/icons";
 import { Preferences } from "@capacitor/preferences";
+import { App } from "@capacitor/app";
 import { useEffect, useState } from "react";
 import "./Home.css";
 
@@ -34,6 +35,7 @@ const Home: React.FC = () => {
   const [todoText, setTodoText] = useState("");
   const [showToast, setShowToast] = useState(false);
   const [searchText, setSearchText] = useState("");
+  const [userName, setUserName] = useState("");
 
   const filteredTodos = todos.filter((todo) =>
     todo.text.toLowerCase().includes(searchText.toLowerCase().trim()),
@@ -41,6 +43,9 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     loadTodos();
+    console.log("window.location.href:", window.location.href);
+    console.log("window.location.search:", window.location.search);
+    loadUserName();
   }, []);
 
   const loadTodos = async () => {
@@ -48,6 +53,27 @@ const Home: React.FC = () => {
 
     if (result.value) {
       setTodos(JSON.parse(result.value));
+    }
+  };
+
+  const loadUserName = async () => {
+    try {
+      const launchUrl = await App.getLaunchUrl();
+
+      console.log("Launch URL:", launchUrl?.url);
+
+      if (!launchUrl?.url) {
+        return;
+      }
+
+      const url = new URL(launchUrl.url);
+      const nameFromParam = url.searchParams.get("userName") ?? "";
+
+      setUserName(nameFromParam);
+
+      console.log("Paramdan gelen kullanıcı:", nameFromParam);
+    } catch (error) {
+      console.log("Kullanıcı adı okunamadı:", error);
     }
   };
 
@@ -84,7 +110,7 @@ const Home: React.FC = () => {
   };
 
   const toggleTodo = async (id: number) => {
-    const newTodos = filteredTodos.map((todo) =>
+    const newTodos = todos.map((todo) =>
       todo.id === id ? { ...todo, completed: !todo.completed } : todo,
     );
 
@@ -112,10 +138,21 @@ const Home: React.FC = () => {
     <IonPage>
       <IonHeader>
         <IonToolbar>
-          <IonTitle>Capacitor To Do</IonTitle>
+          <div className="header-content">
+            <IonTitle className="header-title">Capacitor To Do</IonTitle>
+
+            {userName ? (
+              <IonText>
+                <p className="user-text">Kullanıcı: {userName}</p>
+              </IonText>
+            ) : (
+              <IonText>
+                <p className="user-text">Kullanıcı bilgisi gelmedi</p>
+              </IonText>
+            )}
+          </div>
         </IonToolbar>
       </IonHeader>
-
       <IonContent className="ion-padding">
         <IonSearchbar
           value={searchText}

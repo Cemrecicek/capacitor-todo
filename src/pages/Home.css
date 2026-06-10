@@ -7,6 +7,31 @@ ion-toolbar {
 
 }
 
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    width: 100%;
+}
+
+.header-title {
+    padding: 0;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.user-text {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    max-width: 140px;
+    color: #dbe2ec;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .input-container {
     display: flex;
     align-items: center;
@@ -34,6 +59,11 @@ ion-toolbar {
 
 .delete-button {
     --background: #ec1c09cb;
+}
+
+.user-text {
+    text-align: center;
+    font-weight: 600;
 }
 
 .empty-text {
