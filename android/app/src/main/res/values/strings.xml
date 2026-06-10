@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Capacitor Todo</string>
+    <string name="title_activity_main">Capacitor Todo</string>
+    <string name="package_name">com.cemre.capacitortodo</string>
+    <string name="custom_url_scheme">com.cemre.capacitortodo</string>
+</resources>

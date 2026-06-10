@@ -1,9 +1,9 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'io.ionic.starter',
-  appName: 'capacitor-todo',
-  webDir: 'dist'
+  appId: 'com.cemre.capacitortodo',
+  appName: 'Capacitor Todo',
+  webDir: 'dist',
 };
 
 export default config;

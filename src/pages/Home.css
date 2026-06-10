@@ -1,0 +1,47 @@
+ion-toolbar {
+    width: 100%;
+    --background: #0AB6AB;
+    --color: white;
+    --padding-top: 20px;
+    --padding-bottom: 20px;
+
+}
+
+.input-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+    margin-bottom: 24px;
+}
+
+.todo-input-item {
+    flex: 1;
+    --background: #f7f7f7;
+    --border-radius: 18px;
+    --padding-start: 16px;
+    --inner-padding-end: 16px;
+    --min-height: 56px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.add-button {
+    width: 45px;
+    height: 45px;
+    flex-shrink: 0;
+    --background: #0AB6AB;
+}
+
+.delete-button {
+    --background: #ec1c09cb;
+}
+
+.empty-text {
+    text-align: center;
+    margin-top: 32px;
+}
+
+.completed {
+    text-decoration: line-through;
+    opacity: 0.6;
+}
