@@ -16,6 +16,7 @@ import {
   IonToast,
   IonSearchbar,
 } from "@ionic/react";
+import { Capacitor } from "@capacitor/core";
 import { add } from "ionicons/icons";
 import { Preferences } from "@capacitor/preferences";
 import { App } from "@capacitor/app";
@@ -31,9 +32,11 @@ type Todo = {
 const STORAGE_KEY = "todos";
 
 const Home: React.FC = () => {
+  const platform = Capacitor.getPlatform();
+
   const [todos, setTodos] = useState<Todo[]>([]);
   const [todoText, setTodoText] = useState("");
-  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
   const [searchText, setSearchText] = useState("");
   const [userName, setUserName] = useState("");
 
@@ -90,6 +93,7 @@ const Home: React.FC = () => {
     const trimmedText = todoText.trim();
 
     if (!trimmedText) {
+      setToastMessage("Lütfen bir görev giriniz");
       return;
     }
 
@@ -104,7 +108,7 @@ const Home: React.FC = () => {
     await saveTodos(newTodos);
 
     setTodoText("");
-    setShowToast(true);
+    setToastMessage("Görev eklendi");
 
     console.log("Yeni görev eklendi:", newTodo);
   };
@@ -131,6 +135,7 @@ const Home: React.FC = () => {
 
     await saveTodos(newTodos);
 
+    setToastMessage("Görev silindi");
     console.log("Görev silindi:", deletedTodo?.text);
   };
 
@@ -141,15 +146,20 @@ const Home: React.FC = () => {
           <div className="header-content">
             <IonTitle className="header-title">Capacitor To Do</IonTitle>
 
-            {userName ? (
+            <div className="header_info">
               <IonText>
-                <p className="user-text">Kullanıcı: {userName}</p>
+                <p className="platform-text">Platform: {platform}</p>
               </IonText>
-            ) : (
-              <IonText>
-                <p className="user-text">Kullanıcı bilgisi gelmedi</p>
-              </IonText>
-            )}
+              {userName ? (
+                <IonText>
+                  <p className="user-text">Kullanıcı: {userName}</p>
+                </IonText>
+              ) : (
+                <IonText>
+                  <p className="user-text">Kullanıcı bilgisi gelmedi</p>
+                </IonText>
+              )}
+            </div>
           </div>
         </IonToolbar>
       </IonHeader>
@@ -215,10 +225,10 @@ const Home: React.FC = () => {
         )}
 
         <IonToast
-          isOpen={showToast}
-          message="Görev eklendi"
+          isOpen={toastMessage !== ""}
+          message={toastMessage}
           duration={1500}
-          onDidDismiss={() => setShowToast(false)}
+          onDidDismiss={() => setToastMessage("")}
         />
       </IonContent>
     </IonPage>
