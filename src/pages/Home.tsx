@@ -19,7 +19,6 @@ import {
 import { Capacitor } from "@capacitor/core";
 import { add } from "ionicons/icons";
 import { Preferences } from "@capacitor/preferences";
-import { App } from "@capacitor/app";
 import { useEffect, useState } from "react";
 import "./Home.css";
 
@@ -46,9 +45,20 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     loadTodos();
-    console.log("window.location.href:", window.location.href);
-    console.log("window.location.search:", window.location.search);
-    loadUserName();
+
+    const handleNativeUserName = (event: Event) => {
+      const customEvent = event as CustomEvent<{ userName: string }>;
+      const name = customEvent.detail.userName;
+
+      setUserName(name);
+      console.log("Native Compose alanından gelen isim:", name);
+    };
+
+    window.addEventListener("nativeUserName", handleNativeUserName);
+
+    return () => {
+      window.removeEventListener("nativeUserName", handleNativeUserName);
+    };
   }, []);
 
   const loadTodos = async () => {
@@ -56,27 +66,6 @@ const Home: React.FC = () => {
 
     if (result.value) {
       setTodos(JSON.parse(result.value));
-    }
-  };
-
-  const loadUserName = async () => {
-    try {
-      const launchUrl = await App.getLaunchUrl();
-
-      console.log("Launch URL:", launchUrl?.url);
-
-      if (!launchUrl?.url) {
-        return;
-      }
-
-      const url = new URL(launchUrl.url);
-      const nameFromParam = url.searchParams.get("userName") ?? "";
-
-      setUserName(nameFromParam);
-
-      console.log("Paramdan gelen kullanıcı:", nameFromParam);
-    } catch (error) {
-      console.log("Kullanıcı adı okunamadı:", error);
     }
   };
 
