@@ -16,10 +16,10 @@ import {
   IonToast,
   IonSearchbar,
 } from "@ionic/react";
-import { Capacitor } from "@capacitor/core";
+import { Capacitor, registerPlugin } from "@capacitor/core";
 import { add } from "ionicons/icons";
 import { Preferences } from "@capacitor/preferences";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import "./Home.css";
 
 type Todo = {
@@ -27,6 +27,24 @@ type Todo = {
   text: string;
   completed: boolean;
 };
+
+type ComposeBridgePlugin = {
+  showCompose(options: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    userName: string;
+  }): Promise<void>;
+
+  hideNative(): Promise<void>;
+  addListener(
+    eventName: "nativeUserName",
+    listenerFunc: (data: { userName: string }) => void,
+  ): Promise<{ remove: () => Promise<void> }>;
+};
+
+const ComposeBridge = registerPlugin<ComposeBridgePlugin>("ComposeBridge");
 
 const STORAGE_KEY = "todos";
 
@@ -39,27 +57,74 @@ const Home: React.FC = () => {
   const [searchText, setSearchText] = useState("");
   const [userName, setUserName] = useState("");
 
+  const nativeBoxRef = useRef<HTMLDivElement>(null);
+
   const filteredTodos = todos.filter((todo) =>
     todo.text.toLowerCase().includes(searchText.toLowerCase().trim()),
   );
 
+  const syncNativeViewPosition = useCallback(async () => {
+    if (!nativeBoxRef.current) return;
+
+    const rect = nativeBoxRef.current.getBoundingClientRect();
+    const dpr = window.devicePixelRatio;
+
+    await ComposeBridge.showCompose({
+      x: Math.round(rect.left * dpr),
+      y: Math.round(rect.top * dpr),
+      width: Math.round(rect.width * dpr),
+      height: Math.round(rect.height * dpr),
+      userName,
+    });
+  }, [userName]);
+
   useEffect(() => {
     loadTodos();
 
-    const handleNativeUserName = (event: Event) => {
-      const customEvent = event as CustomEvent<{ userName: string }>;
-      const name = customEvent.detail.userName;
+    let listenerHandle: { remove: () => Promise<void> } | undefined;
 
-      setUserName(name);
-      console.log("Native Compose alanından gelen isim:", name);
+    const setupNativeListener = async () => {
+      listenerHandle = await ComposeBridge.addListener(
+        "nativeUserName",
+        (data) => {
+          setUserName(data.userName);
+          console.log("Native Compose alanından gelen isim:", data.userName);
+        },
+      );
     };
 
-    window.addEventListener("nativeUserName", handleNativeUserName);
-
+    setupNativeListener();
+    
     return () => {
-      window.removeEventListener("nativeUserName", handleNativeUserName);
+      listenerHandle?.remove();
     };
   }, []);
+
+  useEffect(() => {
+
+    window.addEventListener("scroll", syncNativeViewPosition, true);
+    window.addEventListener("resize", syncNativeViewPosition);
+
+    const ionContent = document.querySelector("ion-content");
+    if (ionContent) {
+
+      ionContent.scrollEvents = true; 
+      ionContent.addEventListener("ionScroll", syncNativeViewPosition);
+    }
+
+    const intervalId = setInterval(syncNativeViewPosition, 100);
+
+    return () => {
+      window.removeEventListener("scroll", syncNativeViewPosition, true);
+      window.removeEventListener("resize", syncNativeViewPosition);
+      if (ionContent) {
+        ionContent.removeEventListener("ionScroll", syncNativeViewPosition);
+      }
+      clearInterval(intervalId);
+
+      ComposeBridge.hideNative();
+    };
+  }, [syncNativeViewPosition]);
 
   const loadTodos = async () => {
     const result = await Preferences.get({ key: STORAGE_KEY });
@@ -128,6 +193,7 @@ const Home: React.FC = () => {
     console.log("Görev silindi:", deletedTodo?.text);
   };
 
+
   return (
     <IonPage>
       <IonHeader>
@@ -139,6 +205,7 @@ const Home: React.FC = () => {
               <IonText>
                 <p className="platform-text">Platform: {platform}</p>
               </IonText>
+
               {userName ? (
                 <IonText>
                   <p className="user-text">Kullanıcı: {userName}</p>
@@ -148,16 +215,20 @@ const Home: React.FC = () => {
                   <p className="user-text">Kullanıcı bilgisi gelmedi</p>
                 </IonText>
               )}
+
             </div>
           </div>
         </IonToolbar>
       </IonHeader>
+
       <IonContent className="ion-padding">
+        <div ref={nativeBoxRef} className="native-compose-placeholder" />
+
         <IonSearchbar
           value={searchText}
           onIonInput={(event) => setSearchText(event.detail.value ?? "")}
           placeholder="Görev ara"
-        ></IonSearchbar>
+        />
 
         <div className="input-container">
           <IonItem className="todo-input-item" lines="none">
@@ -174,7 +245,7 @@ const Home: React.FC = () => {
           </IonItem>
 
           <IonFabButton onClick={addTodo} className="add-button">
-            <IonIcon icon={add}></IonIcon>
+            <IonIcon icon={add} />
           </IonFabButton>
         </div>
 
@@ -223,5 +294,4 @@ const Home: React.FC = () => {
     </IonPage>
   );
 };
-
 export default Home;

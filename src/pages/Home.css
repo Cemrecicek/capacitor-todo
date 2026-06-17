@@ -15,6 +15,13 @@ ion-toolbar {
     width: 100%;
 }
 
+.native-compose-placeholder {
+ width: calc(100% - 32px);
+  height: 220px;
+  margin: 16px 0;
+  background: transparent;
+}
+
 .header-title {
     padding: 0;
     font-size: 18px;
